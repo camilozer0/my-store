@@ -18,8 +18,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   category: string | undefined;
   cols = 3;
-  rowHeight = ROW_HEIGHTS[this.cols];
-  products: Array<Product> | undefined;
+  rowHeight: number = ROW_HEIGHTS[this.cols];
+  products: Product[] | undefined;
   sort = 'desc';
   count = '12';
   productsSubscription: Subscription | undefined;
@@ -40,7 +40,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   onColumnsCountChange(colsNum: number): void {
     this.cols = colsNum;
-    this.rowHeight = ROW_HEIGHTS[this.cols]
+    this.rowHeight = ROW_HEIGHTS[colsNum]
   }
 
   onItemsCountChange(newCount: number): void {
