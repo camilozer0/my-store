@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { loadStripe } from '@stripe/stripe-js';
+import { Subscription } from 'rxjs';
 import { Cart, CartItem } from 'src/app/models/cart.models';
 import { CartService } from 'src/app/services/cart.service';
 
@@ -11,25 +12,9 @@ import { CartService } from 'src/app/services/cart.service';
 })
 export class CartComponent implements OnInit {
 
-  cart: Cart = {
-    items: [{
-      product: 'https://via.placeholder.com/150',
-      name: 'Snickers',
-      price: 150.25,
-      quantity: 2,
-      id: 1
-    },
-    {
-      product: 'https://via.placeholder.com/150',
-      name: 'Bars',
-      price: 210.25,
-      quantity: 3,
-      id: 2
-    }]
-  };
-
-  dataSource: Array<CartItem> = [];
-  displayedColumns: Array<string> = [
+  cart: Cart = { items: [] };
+  dataSource: CartItem[] = [];
+  displayedColumns: string[] = [
     'product',
     'name',
     'price',
@@ -37,15 +22,18 @@ export class CartComponent implements OnInit {
     'total',
     'action'
   ]
+  cartSubscription: Subscription | undefined;
 
   constructor(private cartService: CartService, private http: HttpClient) { }
 
   ngOnInit(): void {
-    this.cartService.cart.subscribe((_cart: Cart) => this.cart = _cart);
-    this.dataSource = this.cart.items;
+    this.cartSubscription = this.cartService.cart.subscribe((_cart: Cart) => {
+      this.cart = _cart;
+      this.dataSource = this.cart.items;
+    });
   }
 
-  getTotal(items: Array<CartItem>): number {
+  getTotal(items: CartItem[]): number {
     return this.cartService.getTotal(items);
   }
 
@@ -66,14 +54,21 @@ export class CartComponent implements OnInit {
   }
 
   onCheckout(): void {
-    this.http.post('http://localhost:4242/checkout', {
-      items: this.cart.items
-    }).subscribe(async (res: any) => {
-      let stripe = await loadStripe('pk_test_51NLaMeLrqXVleaKIvUVz1B4QL4jIv3kJlhzWcpkpD3GHUSrknFOYLtJsmBeLusuBHwP9DlIJZIRThZbp4eVLZ7kg006h8GSNax');
-      stripe?.redirectToCheckout({
-        sessionId: res.id
+    this.http
+      .post('http://localhost:4242/checkout', {
+        items: this.cart.items
+      }).subscribe(async (res: any) => {
+        let stripe = await loadStripe('pk_test_51NLaMeLrqXVleaKIvUVz1B4QL4jIv3kJlhzWcpkpD3GHUSrknFOYLtJsmBeLusuBHwP9DlIJZIRThZbp4eVLZ7kg006h8GSNax');
+        stripe?.redirectToCheckout({
+          sessionId: res.id
+        })
       })
-    })
+  }
+
+  onDestroy() {
+    if (this.cartSubscription) {
+      this.cartSubscription.unsubscribe();
+    }
   }
 
 }

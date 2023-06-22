@@ -25,7 +25,7 @@ export class HeaderComponent {
 
   constructor(private cartService: CartService) { }
 
-  getTotal(items: Array<CartItem>): number {
+  getTotal(items: CartItem[]): number {
     return this.cartService.getTotal(items);
   }
 
